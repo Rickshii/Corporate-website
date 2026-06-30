@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply font-body text-slate-800 bg-bg-light;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-semibold text-secondary leading-tight;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/30;
+  }
+  .glass-card {
+    @apply bg-white/90 backdrop-blur-lg border border-white/50 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl;
+  }
+  .section {
+    @apply py-20;
+  }
+  .section-title {
+    @apply text-center text-4xl mb-3 text-secondary font-heading font-semibold;
+  }
+  .section-subtitle {
+    @apply text-center text-primary font-medium font-heading uppercase tracking-widest mb-10 text-sm;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center px-7 py-3 rounded-full font-heading font-medium cursor-pointer transition-all duration-300 border-none text-base;
+  }
+  .btn-primary {
+    @apply bg-primary text-white shadow-[0_4px_14px_0_rgba(15,118,110,0.39)] hover:bg-[#0d655e] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(15,118,110,0.4)];
+  }
+  .btn-secondary {
+    @apply bg-secondary text-white shadow-[0_4px_14px_0_rgba(30,58,138,0.39)] hover:bg-[#172d6e] hover:-translate-y-0.5;
+  }
+  .btn-outline {
+    @apply bg-transparent text-primary border-2 border-primary hover:bg-primary hover:text-white;
+  }
+  .container-custom {
+    @apply w-full max-w-7xl mx-auto px-5;
+  }
+}
