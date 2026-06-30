@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Reveal } from '../../components/ui/Reveal';
-import { API_URL } from '../../config';
+import { API_URL, apiFetch } from '../../config';
 
 const ClientGallery = () => {
   const [gallery, setGallery] = useState<any[]>([]);
@@ -21,7 +21,7 @@ const ClientGallery = () => {
   useEffect(() => {
     const fetchGallery = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/gallery`);
+        const res = await apiFetch(`${API_URL}/api/gallery`);
         const data = await res.json();
         if (Array.isArray(data)) {
           setGallery(data);

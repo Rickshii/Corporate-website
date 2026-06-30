@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { Plus, Pencil, Trash2, X, Loader2 } from 'lucide-react';
 import { useForm, SubmitHandler } from 'react-hook-form';
-import { API_URL } from '../../config';
+import { API_URL, apiFetch } from '../../config';
+
 
 type CourseForm = { title: string; description: string; duration: string; fee: number; isActive: boolean };
 
@@ -16,7 +17,7 @@ const AdminCourses = () => {
 
   const fetch_ = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/courses`);
+      const res = await apiFetch(`${API_URL}/api/courses`);
       setCourses(await res.json());
     } finally { setLoading(false); }
   };
@@ -31,12 +32,12 @@ const AdminCourses = () => {
   const onSubmit: SubmitHandler<CourseForm> = async (data) => {
     const method = editItem ? 'PUT' : 'POST';
     const url = editItem ? `${API_URL}/api/courses/${editItem.id}` : `${API_URL}/api/courses`;
-    await fetch(url, { method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(data) });
+    await apiFetch(url, { method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(data) });
     setShowModal(false); fetch_();
   };
   const del = async (id: number) => {
     if (!confirm('Delete this course?')) return;
-    await fetch(`${API_URL}/api/courses/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    await apiFetch(`${API_URL}/api/courses/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
     fetch_();
   };
 

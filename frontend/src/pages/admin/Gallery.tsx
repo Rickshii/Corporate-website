@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { Plus, Pencil, Trash2, X, Loader2, Image as ImageIcon } from 'lucide-react';
 import { useForm, SubmitHandler } from 'react-hook-form';
-import { API_URL } from '../../config';
+import { API_URL, apiFetch } from '../../config';
+
 
 type GalleryForm = {
   title: string;
@@ -33,7 +34,7 @@ const AdminGallery = () => {
 
   const fetchGallery = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/gallery`);
+      const res = await apiFetch(`${API_URL}/api/gallery`);
       const data = await res.json();
       if (Array.isArray(data)) {
         setGallery(data);
@@ -109,7 +110,7 @@ const AdminGallery = () => {
     const url = editItem ? `${API_URL}/api/gallery/${editItem._id}` : `${API_URL}/api/gallery`;
     
     try {
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
         headers: { 
           Authorization: `Bearer ${token}` 
@@ -133,7 +134,7 @@ const AdminGallery = () => {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this image?')) return;
     try {
-      const res = await fetch(`${API_URL}/api/gallery/${id}`, {
+      const res = await apiFetch(`${API_URL}/api/gallery/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });

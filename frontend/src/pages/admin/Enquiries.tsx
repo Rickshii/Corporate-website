@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { Mail, Phone, Eye, CheckCircle2, Clock, Loader2 } from 'lucide-react';
-import { API_URL } from '../../config';
+import { API_URL, apiFetch } from '../../config';
+
 
 const AdminEnquiries = () => {
   const [enquiries, setEnquiries] = useState<any[]>([]);
@@ -11,14 +12,14 @@ const AdminEnquiries = () => {
 
   const fetch_ = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/enquiries`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await apiFetch(`${API_URL}/api/enquiries`, { headers: { Authorization: `Bearer ${token}` } });
       setEnquiries(await res.json());
     } finally { setLoading(false); }
   };
   useEffect(() => { fetch_(); }, []);
 
   const updateStatus = async (id: number, status: string) => {
-    await fetch(`${API_URL}/api/enquiries/${id}`, {
+    await apiFetch(`${API_URL}/api/enquiries/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ status })

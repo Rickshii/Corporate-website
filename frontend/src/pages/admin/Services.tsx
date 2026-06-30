@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { Plus, Pencil, Trash2, X, Loader2 } from 'lucide-react';
 import { useForm, SubmitHandler } from 'react-hook-form';
-import { API_URL } from '../../config';
+import { API_URL, apiFetch } from '../../config';
+
 
 type ServiceForm = {
   title: string;
@@ -23,7 +24,7 @@ const AdminServices = () => {
 
   const fetchServices = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/services`);
+      const res = await apiFetch(`${API_URL}/api/services`);
       const data = await res.json();
       setServices(data);
     } catch (err) {
@@ -50,7 +51,7 @@ const AdminServices = () => {
     const method = editItem ? 'PUT' : 'POST';
     const url = editItem ? `${API_URL}/api/services/${editItem.id}` : `${API_URL}/api/services`;
     try {
-      await fetch(url, {
+      await apiFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ ...data, features: data.features.split('\n').filter(Boolean) })
@@ -64,7 +65,7 @@ const AdminServices = () => {
 
   const handleDelete = async (id: number) => {
     if (!confirm('Delete this service?')) return;
-    await fetch(`${API_URL}/api/services/${id}`, {
+    await apiFetch(`${API_URL}/api/services/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }
     });

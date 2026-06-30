@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { MapPin, Phone, Mail, Send, Loader2, CheckCircle2 } from 'lucide-react';
 import { Reveal, SectionHeader } from '../../components/ui/Reveal';
-import { API_URL } from '../../config';
+import { API_URL, apiFetch } from '../../config';
 
 type EnquiryForm = {
   name: string;
@@ -18,7 +18,7 @@ const Contact = () => {
 
   const onSubmit: SubmitHandler<EnquiryForm> = async (data) => {
     try {
-      const res = await fetch(`${API_URL}/api/enquiries`, {
+      const res = await apiFetch(`${API_URL}/api/enquiries`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),

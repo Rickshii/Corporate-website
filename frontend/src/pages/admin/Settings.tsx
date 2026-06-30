@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { Loader2, KeyRound, ShieldAlert } from 'lucide-react';
 import { useForm, SubmitHandler } from 'react-hook-form';
-import { API_URL } from '../../config';
+import { API_URL, apiFetch } from '../../config';
 
 type ChangePasswordForm = {
   oldPassword: string;
@@ -27,7 +27,7 @@ const AdminSettings = () => {
     }
 
     try {
-      const res = await fetch(`${API_URL}/api/auth/change-password`, {
+      const res = await apiFetch(`${API_URL}/api/auth/change-password`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

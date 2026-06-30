@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { Gallery } from '../models/models';
+import { uploadToCloudinary, deleteFromCloudinary } from '../lib/cloudinary';
 
 export const getAllGallery = async (_req: Request, res: Response): Promise<void> => {
   try {
@@ -20,13 +21,12 @@ export const createGallery = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    // Convert uploaded buffer to Base64 data URL and store in MongoDB.
-    // This approach is cloud-agnostic — no external storage service needed.
-    const base64Image = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+    // Upload buffer directly to Cloudinary and get secure URL
+    const cloudinaryUrl = await uploadToCloudinary(req.file.buffer);
 
     const newItem = new Gallery({
       title: title || null,
-      imageUrl: base64Image,
+      imageUrl: cloudinaryUrl,
       category: category || null,
     });
 
@@ -34,7 +34,7 @@ export const createGallery = async (req: Request, res: Response): Promise<void> 
     res.status(201).json(newItem);
   } catch (error) {
     console.error('Error creating gallery item:', error);
-    res.status(500).json({ message: 'Error creating gallery item' });
+    res.status(500).json({ message: error instanceof Error ? error.message : 'Error creating gallery item' });
   }
 };
 
@@ -51,9 +51,13 @@ export const updateGallery = async (req: Request, res: Response): Promise<void> 
 
     let imageUrl = item.imageUrl;
 
-    // If a new file is uploaded, replace the stored Base64 image
+    // If a new file is uploaded, upload it to Cloudinary and delete the old one
     if (req.file) {
-      imageUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+      // Delete old image from Cloudinary (ignored if it was a base64 / local upload)
+      if (item.imageUrl) {
+        await deleteFromCloudinary(item.imageUrl);
+      }
+      imageUrl = await uploadToCloudinary(req.file.buffer);
     }
 
     item.title = title !== undefined ? title : item.title;
@@ -64,7 +68,7 @@ export const updateGallery = async (req: Request, res: Response): Promise<void> 
     res.json(item);
   } catch (error) {
     console.error('Error updating gallery item:', error);
-    res.status(500).json({ message: 'Error updating gallery item' });
+    res.status(500).json({ message: error instanceof Error ? error.message : 'Error updating gallery item' });
   }
 };
 
@@ -78,7 +82,11 @@ export const deleteGallery = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    // Image is stored in MongoDB as Base64 — deleting the document removes it completely
+    // Delete image from Cloudinary
+    if (item.imageUrl) {
+      await deleteFromCloudinary(item.imageUrl);
+    }
+
     await Gallery.findByIdAndDelete(id);
 
     res.json({ message: 'Gallery item deleted successfully' });
@@ -87,3 +95,4 @@ export const deleteGallery = async (req: Request, res: Response): Promise<void> 
     res.status(500).json({ message: 'Error deleting gallery item' });
   }
 };
+

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, User, Loader2, ArrowLeft, ShieldAlert } from 'lucide-react';
 import logo from '../../assets/compy logo.jpeg';
-import { API_URL } from '../../config';
+import { API_URL, apiFetch } from '../../config';
 
 const AdminRegister = () => {
   const [name, setName] = useState('');
@@ -20,7 +20,7 @@ const AdminRegister = () => {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}/api/auth/register`, {
+      const res = await apiFetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, name })
