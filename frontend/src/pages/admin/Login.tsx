@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Lock, Mail, Loader2, KeyRound } from 'lucide-react';
 import logo from '../../assets/compy logo.jpeg';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '../../config';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');

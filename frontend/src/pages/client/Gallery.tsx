@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Reveal } from '../../components/ui/Reveal';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '../../config';
 
 const ClientGallery = () => {
   const [gallery, setGallery] = useState<any[]>([]);

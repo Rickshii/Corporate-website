@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { MapPin, Phone, Mail, Send, Loader2, CheckCircle2 } from 'lucide-react';
 import { Reveal, SectionHeader } from '../../components/ui/Reveal';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '../../config';
 
 type EnquiryForm = {
   name: string;

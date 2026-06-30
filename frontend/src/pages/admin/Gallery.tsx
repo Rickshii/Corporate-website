@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { Plus, Pencil, Trash2, X, Loader2, Image as ImageIcon } from 'lucide-react';
 import { useForm, SubmitHandler } from 'react-hook-form';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '../../config';
 
 type GalleryForm = {
   title: string;
