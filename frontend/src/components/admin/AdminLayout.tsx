@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Briefcase, GraduationCap, Users, Image, MessageSquare, Menu, X, LogOut, CheckCircle } from 'lucide-react';
+import { LayoutDashboard, Briefcase, GraduationCap, Users, Image, MessageSquare, Menu, X, LogOut, CheckCircle, Settings } from 'lucide-react';
 
 const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -20,6 +20,7 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { name: 'Gallery', path: '/admin/gallery', icon: Image },
     { name: 'Enquiries', path: '/admin/enquiries', icon: MessageSquare },
     { name: 'Users', path: '/admin/users', icon: Users },
+    { name: 'Settings', path: '/admin/settings', icon: Settings },
   ];
 
   return (

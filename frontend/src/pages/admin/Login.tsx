@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Lock, Mail } from 'lucide-react';
 import logo from '../../assets/compy logo.jpeg';
 
@@ -88,16 +88,30 @@ const AdminLogin = () => {
                   required
                 />
               </div>
+              <div className="mt-2 text-right">
+                <Link to="/admin/forgot-password" className="text-xs font-medium text-primary hover:text-[#0d655e]">
+                  Forgot Password?
+                </Link>
+              </div>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-[#0d655e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-[#0d655e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
+
+          <div className="mt-6 text-center space-y-2">
+            <p className="text-sm text-gray-600">
+              Don't have an admin account?{' '}
+              <Link to="/admin/register" className="font-medium text-primary hover:text-[#0d655e]">
+                Create one
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>
