@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { Plus, Pencil, Trash2, X, Loader2, Image as ImageIcon } from 'lucide-react';
 import { useForm, SubmitHandler } from 'react-hook-form';
+import { supabase } from '../../lib/supabase';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -18,6 +19,7 @@ const AdminGallery = () => {
   
   // For file upload
   const [selectedFileBase64, setSelectedFileBase64] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState('');
 
   const { register, handleSubmit, reset, setValue, formState: { errors, isSubmitting } } = useForm<GalleryForm>();
@@ -42,6 +44,7 @@ const AdminGallery = () => {
     reset(); 
     setEditItem(null); 
     setSelectedFileBase64(null);
+    setSelectedFile(null);
     setFileError('');
     setShowModal(true); 
   };
@@ -51,6 +54,7 @@ const AdminGallery = () => {
     setValue('title', g.title || '');
     setValue('category', g.category || '');
     setSelectedFileBase64(g.imageUrl);
+    setSelectedFile(null);
     setFileError('');
     setShowModal(true);
   };
@@ -71,6 +75,8 @@ const AdminGallery = () => {
       return;
     }
 
+    setSelectedFile(file);
+
     const reader = new FileReader();
     reader.onloadend = () => {
       setSelectedFileBase64(reader.result as string);
@@ -79,9 +85,36 @@ const AdminGallery = () => {
   };
 
   const onSubmit: SubmitHandler<GalleryForm> = async (data) => {
-    if (!selectedFileBase64) {
+    if (!selectedFileBase64 && !editItem) {
       setFileError('Image is required.');
       return;
+    }
+
+    let imageUrl = selectedFileBase64; // Fallback to existing base64/url if editing without changing image
+
+    if (selectedFile) {
+      try {
+        const fileExt = selectedFile.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('gallery-images')
+          .upload(filePath, selectedFile);
+
+        if (uploadError) {
+          throw new Error(`Supabase Upload Error: ${uploadError.message}. Make sure 'gallery-images' bucket exists and is public.`);
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from('gallery-images')
+          .getPublicUrl(filePath);
+
+        imageUrl = publicUrlData.publicUrl;
+      } catch (err: any) {
+        setFileError(err.message);
+        return;
+      }
     }
 
     const method = editItem ? 'PUT' : 'POST';
@@ -90,7 +123,7 @@ const AdminGallery = () => {
       await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ ...data, imageUrl: selectedFileBase64 })
+        body: JSON.stringify({ ...data, imageUrl })
       });
       setShowModal(false);
       fetchGallery();

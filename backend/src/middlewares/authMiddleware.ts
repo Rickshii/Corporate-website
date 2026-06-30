@@ -1,13 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-1234';
+import { supabase } from '../lib/supabase';
 
 export interface AuthRequest extends Request {
   user?: any;
 }
 
-export const authenticateAdmin = (req: AuthRequest, res: Response, next: NextFunction): void => {
+export const authenticateAdmin = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
     
@@ -22,16 +20,16 @@ export const authenticateAdmin = (req: AuthRequest, res: Response, next: NextFun
       res.status(401).json({ message: 'Authentication required' });
       return;
     }
-    const decoded = jwt.verify(token, JWT_SECRET);
+
+    // Verify token with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(token);
     
-    req.user = decoded;
-    
-    // Check if role is admin
-    if (req.user.role !== 'ADMIN') {
-      res.status(403).json({ message: 'Admin access required' });
+    if (error || !user) {
+      res.status(401).json({ message: 'Invalid or expired token' });
       return;
     }
-
+    
+    req.user = user;
     next();
   } catch (error) {
     res.status(401).json({ message: 'Invalid or expired token' });

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, User, Loader2, ArrowLeft } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 import logo from '../../assets/compy logo.jpeg';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -21,20 +22,22 @@ const AdminRegister = () => {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+          }
+        }
       });
       
-      const data = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(data.message || 'Registration failed');
+      if (signUpError) {
+        throw new Error(signUpError.message);
       }
       
-      setSuccess('Account created successfully! You can now log in.');
-      setTimeout(() => navigate('/admin/login'), 2000);
+      setSuccess('Account created successfully! You can now log in. (Check email for confirmation if enabled)');
+      setTimeout(() => navigate('/admin/login'), 3000);
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
     } finally {

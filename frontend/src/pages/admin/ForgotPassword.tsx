@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, KeyRound, Lock, Loader2, ArrowLeft } from 'lucide-react';
+import { Mail, Loader2, ArrowLeft } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 import logo from '../../assets/compy logo.jpeg';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
-  const [secretKey, setSecretKey] = useState('');
-  const [newPassword, setNewPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,20 +20,16 @@ const ForgotPassword = () => {
     setLoading(true);
     
     try {
-      const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, secretKey, newPassword }),
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/admin/settings`,
       });
       
-      const data = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(data.message || 'Password reset failed');
+      if (resetError) {
+        throw new Error(resetError.message);
       }
       
-      setSuccess('Password reset successfully. You can now log in.');
-      setTimeout(() => navigate('/admin/login'), 2000);
+      setSuccess('Password reset email sent! Please check your inbox.');
+      setTimeout(() => navigate('/admin/login'), 4000);
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
     } finally {
@@ -76,41 +71,6 @@ const ForgotPassword = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:ring-primary focus:border-primary sm:text-sm bg-gray-50"
                   placeholder="admin@valuesvruksha.in"
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Admin Secret Key</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <KeyRound className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="password"
-                  value={secretKey}
-                  onChange={(e) => setSecretKey(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:ring-primary focus:border-primary sm:text-sm bg-gray-50"
-                  placeholder="Enter secret key"
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:ring-primary focus:border-primary sm:text-sm bg-gray-50"
-                  placeholder="••••••••"
-                  minLength={6}
                   required
                 />
               </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Lock, Mail } from 'lucide-react';
+import { Lock, Mail, Loader2 } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 import logo from '../../assets/compy logo.jpeg';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -18,22 +19,26 @@ const AdminLogin = () => {
     setLoading(true);
     
     try {
-      const res = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
-      
-      const data = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(data.message || 'Login failed');
+
+      if (signInError) {
+        throw new Error(signInError.message);
       }
-      
-      localStorage.setItem('adminToken', data.token);
-      navigate('/admin');
+
+      if (data.session) {
+        // Save token to localStorage for backend requests
+        localStorage.setItem('adminToken', data.session.access_token);
+        
+        // Wait briefly for local storage and React state to catch up
+        setTimeout(() => {
+          navigate('/admin');
+        }, 100);
+      }
     } catch (err: any) {
-      setError(err.message || 'Something went wrong');
+      setError(err.message || 'Invalid email or password');
     } finally {
       setLoading(false);
     }
@@ -98,8 +103,9 @@ const AdminLogin = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-[#0d655e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex justify-center items-center gap-2 py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-[#0d655e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
+              {loading && <Loader2 size={16} className="animate-spin" />}
               {loading ? 'Signing In...' : 'Sign In'}
             </button>
           </form>

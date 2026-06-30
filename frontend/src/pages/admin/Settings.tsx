@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { Loader2, KeyRound } from 'lucide-react';
 import { useForm, SubmitHandler } from 'react-hook-form';
+import { supabase } from '../../lib/supabase';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -14,9 +15,7 @@ type ChangePasswordForm = {
 const AdminSettings = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } = useForm<ChangePasswordForm>();
-
-  const token = localStorage.getItem('adminToken');
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<ChangePasswordForm>();
 
   const onSubmit: SubmitHandler<ChangePasswordForm> = async (data) => {
     setError('');
@@ -28,19 +27,13 @@ const AdminSettings = () => {
     }
 
     try {
-      const res = await fetch(`${API_URL}/api/auth/change-password`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` 
-        },
-        body: JSON.stringify({ oldPassword: data.oldPassword, newPassword: data.newPassword }),
+      // With Supabase Auth, you don't need the old password to update the password if you're logged in
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: data.newPassword
       });
       
-      const resData = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(resData.message || 'Failed to change password');
+      if (updateError) {
+        throw new Error(updateError.message);
       }
       
       setSuccess('Password changed successfully');
@@ -75,17 +68,6 @@ const AdminSettings = () => {
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
-            <input 
-              type="password" 
-              {...register('oldPassword', { required: 'Current password is required' })} 
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-primary focus:border-primary" 
-              placeholder="••••••••"
-            />
-            {errors.oldPassword && <p className="text-red-500 text-xs mt-1">{errors.oldPassword.message}</p>}
-          </div>
-          
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
             <input 

@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Briefcase, GraduationCap, Users, Image, MessageSquare, Menu, X, LogOut, CheckCircle, Settings } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 
 const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     localStorage.removeItem('adminToken');
     navigate('/admin/login');
   };
