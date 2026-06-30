@@ -14,25 +14,31 @@ const Hero = () => (
     <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full -translate-y-1/4 translate-x-1/4 blur-3xl" />
     <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/5 rounded-full translate-y-1/2 -translate-x-1/4 blur-3xl" />
 
-    <div className="container-custom relative z-10 py-20">
+    <div className="container-custom relative z-10 py-24 sm:py-20">
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
         className="max-w-3xl"
       >
-        <span className="inline-block bg-accent/15 text-accent font-heading font-semibold text-sm px-4 py-1.5 rounded-full mb-6">Established 2018 · PAN India</span>
-        <h1 className="text-5xl lg:text-6xl font-heading font-bold text-secondary leading-tight mb-6">
-          Empowering Businesses & Building <span className="text-primary">Future Professionals</span>
+        {/* Company name — mobile only (navbar already shows it on sm+) */}
+        <div className="flex items-center gap-2 mb-5 sm:hidden">
+          <p className="font-heading font-bold text-primary text-xl leading-tight">Values Vruksha</p>
+          <span className="text-gray-300">|</span>
+          <p className="text-xs text-gray-400 leading-tight font-medium">Private Limited</p>
+        </div>
+        <span className="inline-block bg-accent/15 text-accent font-heading font-semibold text-xs sm:text-sm px-3 sm:px-4 py-1.5 rounded-full mb-5 sm:mb-6">Established 2018 · PAN India</span>
+        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-heading font-bold text-secondary leading-tight mb-4 sm:mb-6">
+          Empowering Businesses &amp; Building <span className="text-primary">Future Professionals</span>
         </h1>
-        <p className="text-lg text-gray-600 mb-8 max-w-xl leading-relaxed">
+        <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8 max-w-xl leading-relaxed">
           Trusted consulting, taxation, compliance, and career-focused training — delivering value-driven solutions across India since 2018.
         </p>
-        <div className="flex flex-wrap gap-4">
-          <Link to="/contact" className="btn btn-primary gap-2 text-base px-7 py-3.5">
+        <div className="flex flex-col xs:flex-row flex-wrap gap-3 sm:gap-4">
+          <Link to="/contact" className="btn btn-primary gap-2 text-sm sm:text-base px-6 sm:px-7 py-3 sm:py-3.5 w-full xs:w-auto justify-center">
             Book Consultation <ArrowRight size={18} />
           </Link>
-          <Link to="/training" className="btn btn-outline text-base px-7 py-3.5">Explore Training</Link>
+          <Link to="/training" className="btn btn-outline text-sm sm:text-base px-6 sm:px-7 py-3 sm:py-3.5 w-full xs:w-auto justify-center">Explore Training</Link>
         </div>
       </motion.div>
     </div>

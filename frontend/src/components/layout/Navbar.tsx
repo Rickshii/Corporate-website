@@ -30,11 +30,11 @@ const Navbar = () => {
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-md shadow-md h-16' : 'bg-white h-20'}`}>
       <div className="container-custom h-full flex items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-3 shrink-0">
-          <img src={logo} alt="Values Vruksha" className="h-12 w-auto object-contain" />
-          <div className="hidden sm:block">
-            <p className="font-heading font-bold text-primary text-lg leading-tight">Values Vruksha</p>
-            <p className="text-xs text-gray-400 leading-tight">Private Limited</p>
+        <Link to="/" className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <img src={logo} alt="Values Vruksha" className="h-9 sm:h-12 w-auto object-contain" />
+          <div>
+            <p className="font-heading font-bold text-primary text-sm sm:text-lg leading-tight">Values Vruksha</p>
+            <p className="text-[10px] sm:text-xs text-gray-400 leading-tight">Private Limited</p>
           </div>
         </Link>
 
