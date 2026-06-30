@@ -8,10 +8,14 @@ const ClientGallery = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('All');
 
-  // Helper to resolve absolute vs relative uploads URL
+  // Handle all image URL formats:
+  // 1. Base64: data:image/... (stored in MongoDB) — use directly
+  // 2. Absolute: http://... — use directly
+  // 3. Relative: /uploads/... (legacy local) — prefix with API_URL
   const getFullImageUrl = (url: string) => {
     if (!url) return '';
-    return url.startsWith('http') ? url : `${API_URL}${url}`;
+    if (url.startsWith('data:') || url.startsWith('http')) return url;
+    return `${API_URL}${url}`;
   };
   
   useEffect(() => {

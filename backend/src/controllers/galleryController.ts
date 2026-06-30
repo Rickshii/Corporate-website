@@ -1,23 +1,5 @@
 import { Request, Response } from 'express';
-import path from 'path';
-import fs from 'fs';
 import { Gallery } from '../models/models';
-
-// Helper to delete physical file from disk
-const deleteDiskFile = (imageUrl: string) => {
-  try {
-    if (imageUrl && imageUrl.startsWith('/uploads/')) {
-      const fileName = imageUrl.replace('/uploads/', '');
-      const filePath = path.join(__dirname, '../../uploads', fileName);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-        console.log(`🗑️ Deleted local image file: ${filePath}`);
-      }
-    }
-  } catch (error) {
-    console.error('Error deleting file from disk:', error);
-  }
-};
 
 export const getAllGallery = async (_req: Request, res: Response): Promise<void> => {
   try {
@@ -32,17 +14,19 @@ export const getAllGallery = async (_req: Request, res: Response): Promise<void>
 export const createGallery = async (req: Request, res: Response): Promise<void> => {
   try {
     const { title, category } = req.body;
-    
+
     if (!req.file) {
       res.status(400).json({ message: 'Image file is required' });
       return;
     }
 
-    const imageUrl = `/uploads/${req.file.filename}`;
+    // Convert uploaded buffer to Base64 data URL and store in MongoDB.
+    // This approach is cloud-agnostic — no external storage service needed.
+    const base64Image = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
 
     const newItem = new Gallery({
       title: title || null,
-      imageUrl,
+      imageUrl: base64Image,
       category: category || null,
     });
 
@@ -58,7 +42,7 @@ export const updateGallery = async (req: Request, res: Response): Promise<void> 
   try {
     const { id } = req.params;
     const { title, category } = req.body;
-    
+
     const item = await Gallery.findById(id);
     if (!item) {
       res.status(404).json({ message: 'Gallery item not found' });
@@ -67,10 +51,9 @@ export const updateGallery = async (req: Request, res: Response): Promise<void> 
 
     let imageUrl = item.imageUrl;
 
-    // If new file is uploaded, update URL and delete old file
+    // If a new file is uploaded, replace the stored Base64 image
     if (req.file) {
-      deleteDiskFile(item.imageUrl);
-      imageUrl = `/uploads/${req.file.filename}`;
+      imageUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
     }
 
     item.title = title !== undefined ? title : item.title;
@@ -89,16 +72,13 @@ export const deleteGallery = async (req: Request, res: Response): Promise<void> 
   try {
     const { id } = req.params;
     const item = await Gallery.findById(id);
-    
+
     if (!item) {
       res.status(404).json({ message: 'Gallery item not found' });
       return;
     }
 
-    // Delete file from disk
-    deleteDiskFile(item.imageUrl);
-
-    // Delete document from MongoDB
+    // Image is stored in MongoDB as Base64 — deleting the document removes it completely
     await Gallery.findByIdAndDelete(id);
 
     res.json({ message: 'Gallery item deleted successfully' });
@@ -107,4 +87,3 @@ export const deleteGallery = async (req: Request, res: Response): Promise<void> 
     res.status(500).json({ message: 'Error deleting gallery item' });
   }
 };
-

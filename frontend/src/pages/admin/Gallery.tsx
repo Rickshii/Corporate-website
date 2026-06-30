@@ -24,10 +24,11 @@ const AdminGallery = () => {
 
   const token = localStorage.getItem('adminToken');
 
-  // Helper to get full image URL (prepends API_URL if path is relative)
+  // Handle all image URL formats: base64 data URLs, absolute URLs, and legacy relative /uploads/ paths
   const getFullImageUrl = (url: string) => {
     if (!url) return '';
-    return url.startsWith('http') ? url : `${API_URL}${url}`;
+    if (url.startsWith('data:') || url.startsWith('http')) return url;
+    return `${API_URL}${url}`;
   };
 
   const fetchGallery = async () => {

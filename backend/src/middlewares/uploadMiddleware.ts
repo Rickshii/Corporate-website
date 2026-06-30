@@ -1,23 +1,4 @@
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-
-// Ensure uploads directory exists
-const uploadDir = path.join(__dirname, '../../uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (_req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
-    cb(null, 'gallery-' + uniqueSuffix + ext);
-  }
-});
 
 const fileFilter = (_req: any, file: any, cb: any) => {
   const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -28,10 +9,12 @@ const fileFilter = (_req: any, file: any, cb: any) => {
   }
 };
 
+// Use memory storage — images converted to Base64 and stored in MongoDB.
+// This makes the backend fully stateless and cloud-deployable (no local disk needed).
 export const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
+    fileSize: 5 * 1024 * 1024, // 5MB limit
   }
 });
