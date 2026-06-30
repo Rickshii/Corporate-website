@@ -6,7 +6,8 @@ import { WhatsAppButton, BackToTop } from './FloatingActions';
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="min-h-screen flex flex-col">
     <Navbar />
-    <main className="flex-1 pt-20">{children}</main>
+    {/* pt-0 because hero sections on each page already account for the navbar height */}
+    <main className="flex-1">{children}</main>
     <Footer />
     <WhatsAppButton />
     <BackToTop />

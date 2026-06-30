@@ -2,55 +2,262 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Google Fonts ─────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap');
+
 @layer base {
   html {
     scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
   }
+
   body {
     @apply font-body text-slate-800 bg-bg-light;
   }
+
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading font-semibold text-secondary leading-tight;
   }
-  .text-white h1,
-  .text-white h2,
-  .text-white h3,
-  .text-white h4,
-  .text-white h5,
-  .text-white h6 {
-    color: #ffffff;
+
+  /* Elegant custom scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #f0fdf9; }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #10b981, #0f1f4d);
+    border-radius: 99px;
   }
+  ::-webkit-scrollbar-thumb:hover { background: #059669; }
 }
 
 @layer components {
+
+  /* ── Glass Effect ─────────────────────────────────────────────────────── */
   .glass {
-    @apply bg-white/70 backdrop-blur-md border border-white/30;
+    @apply bg-white/10 backdrop-blur-md border border-white/20;
   }
+
   .glass-card {
-    @apply bg-white/90 backdrop-blur-lg border border-white/50 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 20px;
+    box-shadow: 0 10px 40px -10px rgba(15, 31, 77, 0.1), 0 1px 0 rgba(255,255,255,0.8) inset;
+    transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.35s ease;
   }
+
+  .glass-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 24px 60px -10px rgba(15, 31, 77, 0.18), 0 1px 0 rgba(255,255,255,0.8) inset;
+  }
+
+  /* Dark glassmorphism — used on dark sections */
+  .glass-dark {
+    background: rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    transition: background 0.3s ease, transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  .glass-dark:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-4px);
+  }
+
+  /* ── Sections ─────────────────────────────────────────────────────────── */
   .section {
-    @apply py-20;
+    @apply py-24;
   }
+
   .section-title {
-    @apply text-center text-4xl mb-3 text-secondary font-heading font-semibold;
+    @apply text-center text-4xl mb-3 text-secondary font-heading font-bold;
   }
+
   .section-subtitle {
-    @apply text-center text-primary font-medium font-heading uppercase tracking-widest mb-10 text-sm;
+    @apply text-center text-primary font-semibold font-heading uppercase tracking-[0.18em] mb-10 text-xs;
   }
+
+  /* ── Buttons ──────────────────────────────────────────────────────────── */
   .btn {
-    @apply inline-flex items-center justify-center px-7 py-3 rounded-full font-heading font-medium cursor-pointer transition-all duration-300 border-none text-base;
+    @apply inline-flex items-center justify-center px-7 py-3 rounded-full font-heading font-semibold cursor-pointer transition-all duration-300 border-none text-base gap-2;
+    letter-spacing: 0.01em;
   }
+
   .btn-primary {
-    @apply bg-primary text-white shadow-[0_4px_14px_0_rgba(15,118,110,0.39)] hover:bg-[#0d655e] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(15,118,110,0.4)];
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    box-shadow: 0 4px 20px rgba(16,185,129,0.4);
   }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(16,185,129,0.55);
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  }
+  .btn-primary:active { transform: translateY(0); }
+
   .btn-secondary {
-    @apply bg-secondary text-white shadow-[0_4px_14px_0_rgba(30,58,138,0.39)] hover:bg-[#172d6e] hover:-translate-y-0.5;
+    background: linear-gradient(135deg, #0f1f4d 0%, #1e3a8a 100%);
+    color: white;
+    box-shadow: 0 4px 20px rgba(15,31,77,0.35);
   }
+  .btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(15,31,77,0.5);
+  }
+
   .btn-outline {
-    @apply bg-transparent text-primary border-2 border-primary hover:bg-primary hover:text-white;
+    @apply bg-transparent text-primary border-2 border-primary;
   }
+  .btn-outline:hover {
+    @apply bg-primary text-white;
+    box-shadow: 0 4px 20px rgba(16,185,129,0.35);
+    transform: translateY(-2px);
+  }
+
+  .btn-ghost {
+    background: rgba(255,255,255,0.12);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.25);
+    backdrop-filter: blur(8px);
+  }
+  .btn-ghost:hover {
+    background: rgba(255,255,255,0.2);
+    transform: translateY(-2px);
+  }
+
+  /* ── Container ────────────────────────────────────────────────────────── */
   .container-custom {
-    @apply w-full max-w-7xl mx-auto px-5;
+    @apply w-full max-w-7xl mx-auto px-5 sm:px-8;
+  }
+
+  /* ── Hero Overlay ─────────────────────────────────────────────────────── */
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(15, 31, 77, 0.88) 0%,
+      rgba(15, 31, 77, 0.75) 40%,
+      rgba(16, 185, 129, 0.25) 100%
+    );
+  }
+
+  .hero-overlay-strong {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to right,
+      rgba(15, 31, 77, 0.92) 0%,
+      rgba(15, 31, 77, 0.80) 55%,
+      rgba(16, 185, 129, 0.3) 100%
+    );
+  }
+
+  /* ── Section Divider ──────────────────────────────────────────────────── */
+  .section-divider {
+    height: 2px;
+    background: linear-gradient(to right, transparent, #10b981, transparent);
+    opacity: 0.3;
+  }
+
+  /* ── Stat Card ────────────────────────────────────────────────────────── */
+  .stat-card {
+    background: rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    transition: background 0.3s ease, transform 0.3s ease;
+  }
+  .stat-card:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-4px);
+  }
+
+  /* ── Grid Pattern Background ──────────────────────────────────────────── */
+  .bg-grid-pattern {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+
+  .bg-dots-pattern {
+    background-image: radial-gradient(circle, rgba(16,185,129,0.12) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  /* ── Input Fields ─────────────────────────────────────────────────────── */
+  .input-premium {
+    @apply w-full px-5 py-3.5 border border-slate-200 rounded-2xl text-sm font-body;
+    background: rgba(255,255,255,0.9);
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    outline: none;
+  }
+  .input-premium:focus {
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+  }
+  .input-premium::placeholder { color: #94a3b8; }
+
+  /* ── Tag / Pill ───────────────────────────────────────────────────────── */
+  .pill-emerald {
+    @apply inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold font-heading uppercase tracking-wider;
+    background: rgba(16,185,129,0.12);
+    color: #059669;
+    border: 1px solid rgba(16,185,129,0.2);
+  }
+
+  .pill-light {
+    @apply inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold font-heading uppercase tracking-wider;
+    background: rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.9);
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  /* ── Decorative Blobs ─────────────────────────────────────────────────── */
+  .blob {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(64px);
+    opacity: 0.4;
+    animation: blob-drift 8s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  /* ── Icon Box ─────────────────────────────────────────────────────────── */
+  .icon-box-emerald {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05));
+    border: 1px solid rgba(16,185,129,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+  }
+  .group:hover .icon-box-emerald {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-color: transparent;
+    box-shadow: 0 4px 16px rgba(16,185,129,0.4);
+  }
+  .group:hover .icon-box-emerald svg { color: white !important; }
+
+  .icon-box-navy {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(15,31,77,0.08), rgba(15,31,77,0.04));
+    border: 1px solid rgba(15,31,77,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
   }
 }

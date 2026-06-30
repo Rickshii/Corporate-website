@@ -7,9 +7,13 @@ export const WhatsAppButton = () => (
     target="_blank"
     rel="noopener noreferrer"
     aria-label="Chat on WhatsApp"
-    className="fixed bottom-8 left-6 z-50 w-14 h-14 bg-[#25D366] text-white rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-transform"
+    className="fixed bottom-8 left-6 z-50 w-14 h-14 text-white rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 hover:-translate-y-1"
+    style={{
+      background: '#25D366',
+      boxShadow: '0 6px 24px rgba(37,211,102,0.5)',
+    }}
   >
-    <MessageCircle size={28} fill="white" />
+    <MessageCircle size={27} fill="white" />
   </a>
 );
 
@@ -24,7 +28,14 @@ export const BackToTop = () => {
     <button
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       aria-label="Back to top"
-      className={`fixed bottom-8 right-6 z-50 w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center shadow-xl transition-all duration-300 hover:bg-[#0d655e] hover:-translate-y-1 ${visible ? 'opacity-100 pointer-events-auto translate-y-0' : 'opacity-0 pointer-events-none translate-y-4'}`}
+      className="fixed bottom-8 right-6 z-50 w-12 h-12 text-white rounded-full flex items-center justify-center transition-all duration-300 hover:-translate-y-1"
+      style={{
+        background: 'linear-gradient(135deg, #10b981, #059669)',
+        boxShadow: visible ? '0 6px 24px rgba(16,185,129,0.5)' : 'none',
+        opacity: visible ? 1 : 0,
+        pointerEvents: visible ? 'auto' : 'none',
+        transform: visible ? 'translateY(0)' : 'translateY(12px)',
+      }}
     >
       <ArrowUp size={22} />
     </button>
