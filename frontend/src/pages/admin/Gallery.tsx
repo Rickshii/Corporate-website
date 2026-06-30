@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { Plus, Pencil, Trash2, X, Loader2, Image as ImageIcon } from 'lucide-react';
 import { useForm, SubmitHandler } from 'react-hook-form';
-import { supabase } from '../../lib/supabase';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -18,7 +17,7 @@ const AdminGallery = () => {
   const [editItem, setEditItem] = useState<any>(null);
   
   // For file upload
-  const [selectedFileBase64, setSelectedFileBase64] = useState<string | null>(null);
+  const [selectedFilePreview, setSelectedFilePreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState('');
 
@@ -26,13 +25,21 @@ const AdminGallery = () => {
 
   const token = localStorage.getItem('adminToken');
 
+  // Helper to get full image URL (prepends API_URL if path is relative)
+  const getFullImageUrl = (url: string) => {
+    if (!url) return '';
+    return url.startsWith('http') ? url : `${API_URL}${url}`;
+  };
+
   const fetchGallery = async () => {
     try {
       const res = await fetch(`${API_URL}/api/gallery`);
       const data = await res.json();
-      setGallery(data);
+      if (Array.isArray(data)) {
+        setGallery(data);
+      }
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching gallery:', err);
     } finally {
       setLoading(false);
     }
@@ -43,7 +50,7 @@ const AdminGallery = () => {
   const openAdd = () => { 
     reset(); 
     setEditItem(null); 
-    setSelectedFileBase64(null);
+    setSelectedFilePreview(null);
     setSelectedFile(null);
     setFileError('');
     setShowModal(true); 
@@ -53,7 +60,7 @@ const AdminGallery = () => {
     setEditItem(g);
     setValue('title', g.title || '');
     setValue('category', g.category || '');
-    setSelectedFileBase64(g.imageUrl);
+    setSelectedFilePreview(getFullImageUrl(g.imageUrl));
     setSelectedFile(null);
     setFileError('');
     setShowModal(true);
@@ -69,7 +76,6 @@ const AdminGallery = () => {
       return;
     }
 
-    // Limit size to 5MB
     if (file.size > 5 * 1024 * 1024) {
       setFileError('Image size should be less than 5MB.');
       return;
@@ -79,76 +85,77 @@ const AdminGallery = () => {
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      setSelectedFileBase64(reader.result as string);
+      setSelectedFilePreview(reader.result as string);
     };
     reader.readAsDataURL(file);
   };
 
   const onSubmit: SubmitHandler<GalleryForm> = async (data) => {
-    if (!selectedFileBase64 && !editItem) {
-      setFileError('Image is required.');
+    if (!selectedFile && !editItem) {
+      setFileError('Image file is required.');
       return;
     }
 
-    let imageUrl = selectedFileBase64; // Fallback to existing base64/url if editing without changing image
-
+    // Prepare multipart FormData
+    const formData = new FormData();
+    formData.append('title', data.title || '');
+    formData.append('category', data.category || '');
+    
     if (selectedFile) {
-      try {
-        const fileExt = selectedFile.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('gallery-images')
-          .upload(filePath, selectedFile);
-
-        if (uploadError) {
-          throw new Error(`Supabase Upload Error: ${uploadError.message}. Make sure 'gallery-images' bucket exists and is public.`);
-        }
-
-        const { data: publicUrlData } = supabase.storage
-          .from('gallery-images')
-          .getPublicUrl(filePath);
-
-        imageUrl = publicUrlData.publicUrl;
-      } catch (err: any) {
-        setFileError(err.message);
-        return;
-      }
+      formData.append('image', selectedFile);
     }
 
     const method = editItem ? 'PUT' : 'POST';
-    const url = editItem ? `${API_URL}/api/gallery/${editItem.id}` : `${API_URL}/api/gallery`;
+    const url = editItem ? `${API_URL}/api/gallery/${editItem._id}` : `${API_URL}/api/gallery`;
+    
     try {
-      await fetch(url, {
+      const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ ...data, imageUrl })
+        headers: { 
+          Authorization: `Bearer ${token}` 
+        },
+        body: formData
       });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.message || 'Failed to save gallery item.');
+      }
+
       setShowModal(false);
+      fetchGallery();
+    } catch (err: any) {
+      console.error(err);
+      setFileError(err.message || 'An error occurred while uploading.');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this image?')) return;
+    try {
+      const res = await fetch(`${API_URL}/api/gallery/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to delete item');
+      }
+
       fetchGallery();
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Delete this image?')) return;
-    await fetch(`${API_URL}/api/gallery/${id}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    fetchGallery();
-  };
-
   return (
     <AdminLayout>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Manage Gallery</h1>
-          <p className="text-gray-500 mt-1">{gallery.length} images</p>
+          <h2 className="text-3xl font-heading font-extrabold text-white tracking-tight">Manage Gallery</h2>
+          <p className="text-slate-400 mt-1 text-sm font-body">{gallery.length} images uploaded permanently</p>
         </div>
-        <button onClick={openAdd} className="flex items-center gap-2 btn btn-primary text-sm px-4 py-2">
+        <button onClick={openAdd} className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-primary to-primary-dark font-heading font-semibold text-sm text-white hover:shadow-[0_4px_16px_rgba(16,185,129,0.35)] transform hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer">
           <Plus size={18} /> Add Image
         </button>
       </div>
@@ -157,19 +164,25 @@ const AdminGallery = () => {
         <div className="flex justify-center py-20"><Loader2 size={32} className="animate-spin text-primary" /></div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {gallery.length === 0 && <div className="col-span-full bg-white rounded-xl p-10 text-center text-gray-400">No images yet. Click "Add Image" to get started.</div>}
+          {gallery.length === 0 && (
+            <div className="col-span-full glass-dark border border-white/5 rounded-2xl p-16 text-center text-slate-500 font-body">
+              <ImageIcon className="mx-auto h-12 w-12 text-slate-600 mb-3" />
+              <p className="text-base">No images yet. Click "Add Image" to get started.</p>
+            </div>
+          )}
           {gallery.map((g) => (
-            <div key={g.id} className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm flex flex-col">
-              <div className="aspect-video w-full bg-gray-100 overflow-hidden relative group">
-                <img src={g.imageUrl} alt={g.title || 'Gallery image'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            <div key={g._id} className="glass-dark border border-white/5 rounded-2xl overflow-hidden shadow-lg flex flex-col hover:border-white/10 transition-colors">
+              <div className="aspect-video w-full bg-navy-900/50 overflow-hidden relative group border-b border-white/5">
+                <img src={getFullImageUrl(g.imageUrl)} alt={g.title || 'Gallery image'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-t from-navy-950/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
-              <div className="p-4 flex flex-col flex-1">
-                <h3 className="font-semibold text-gray-800 truncate">{g.title || 'Untitled'}</h3>
-                <span className="text-xs text-primary font-medium mt-1 uppercase tracking-wide">{g.category || 'Uncategorized'}</span>
+              <div className="p-5 flex flex-col flex-1">
+                <h3 className="font-heading font-bold text-white truncate text-base">{g.title || 'Untitled'}</h3>
+                <span className="inline-block mt-2 self-start px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">{g.category || 'General'}</span>
                 
-                <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100 justify-end">
-                  <button onClick={() => openEdit(g)} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"><Pencil size={18} /></button>
-                  <button onClick={() => handleDelete(g.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={18} /></button>
+                <div className="flex gap-3 mt-5 pt-4 border-t border-white/5 justify-end">
+                  <button onClick={() => openEdit(g)} className="p-2.5 text-blue-400 hover:bg-blue-500/10 rounded-xl transition-all cursor-pointer"><Pencil size={18} /></button>
+                  <button onClick={() => handleDelete(g._id)} className="p-2.5 text-red-400 hover:bg-red-500/10 rounded-xl transition-all cursor-pointer"><Trash2 size={18} /></button>
                 </div>
               </div>
             </div>
@@ -179,47 +192,50 @@ const AdminGallery = () => {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-gray-100">
-              <h2 className="text-lg font-bold text-gray-800">{editItem ? 'Edit Image' : 'Add New Image'}</h2>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X size={20} /></button>
+        <div className="fixed inset-0 bg-navy-950/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="glass-dark border border-white/10 rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto relative">
+            <div className="flex items-center justify-between p-6 border-b border-white/5">
+              <h3 className="text-xl font-heading font-extrabold text-white">{editItem ? 'Edit Image Info' : 'Upload New Image'}</h3>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-white/5 rounded-xl text-slate-400 hover:text-white transition-colors cursor-pointer"><X size={20} /></button>
             </div>
-            <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
+            
+            <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                <input {...register('title')} placeholder="Event title..." className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-primary focus:border-primary" />
+                <label className="block text-sm font-medium text-slate-300 mb-2 font-heading">Title</label>
+                <input {...register('title')} placeholder="Enter event or course title..." className="w-full px-4 py-3 bg-navy-900 border border-white/10 rounded-2xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all font-body" />
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                <input {...register('category')} placeholder="e.g. CSR, Training" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-primary focus:border-primary" />
+                <label className="block text-sm font-medium text-slate-300 mb-2 font-heading">Category</label>
+                <input {...register('category')} placeholder="e.g. Training, Placement, CSR" className="w-full px-4 py-3 bg-navy-900 border border-white/10 rounded-2xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all font-body" />
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Image Upload *</label>
-                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:bg-gray-50 transition-colors">
-                  <div className="space-y-1 text-center">
-                    {selectedFileBase64 ? (
-                       <img src={selectedFileBase64} alt="Preview" className="mx-auto h-32 w-auto object-contain rounded" />
+                <label className="block text-sm font-medium text-slate-300 mb-2 font-heading">Image Upload *</label>
+                <div className="mt-1 flex justify-center px-6 pt-6 pb-6 border-2 border-white/10 border-dashed rounded-2xl hover:bg-white/5 transition-colors cursor-pointer relative">
+                  <div className="space-y-2 text-center">
+                    {selectedFilePreview ? (
+                       <img src={selectedFilePreview} alt="Preview" className="mx-auto h-36 w-auto object-contain rounded-xl border border-white/10 shadow-lg" />
                     ) : (
-                      <ImageIcon className="mx-auto h-12 w-12 text-gray-400" />
+                      <ImageIcon className="mx-auto h-12 w-12 text-slate-500" />
                     )}
-                    <div className="flex text-sm text-gray-600 justify-center mt-4">
-                      <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-[#0d655e] focus-within:outline-none">
+                    <div className="flex text-sm text-slate-300 justify-center mt-4">
+                      <label htmlFor="file-upload" className="relative cursor-pointer bg-transparent rounded-md font-semibold text-emerald-400 hover:text-emerald-300 transition-colors">
                         <span>Upload a file</span>
                         <input id="file-upload" name="file-upload" type="file" accept="image/*" className="sr-only" onChange={handleFileChange} />
                       </label>
                     </div>
-                    <p className="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
+                    <p className="text-xs text-slate-500 font-body">PNG, JPG, GIF or WEBP up to 5MB</p>
                   </div>
                 </div>
-                {fileError && <p className="text-red-500 text-xs mt-1">{fileError}</p>}
+                {fileError && <p className="text-red-400 text-xs mt-2 font-semibold font-body">⚠️ {fileError}</p>}
               </div>
               
-              <div className="flex gap-3 pt-4 border-t border-gray-100">
-                <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50">Cancel</button>
-                <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-[#0d655e] flex items-center justify-center gap-2">
+              <div className="flex gap-3 pt-5 border-t border-white/5">
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-3 border border-white/10 bg-transparent text-slate-300 rounded-2xl text-sm font-semibold hover:bg-white/5 hover:text-white transition-all cursor-pointer">Cancel</button>
+                <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-2xl text-sm font-semibold hover:shadow-[0_4px_16px_rgba(16,185,129,0.35)] flex items-center justify-center gap-2 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                   {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : null}
-                  {editItem ? 'Update' : 'Upload'}
+                  {editItem ? 'Update Details' : 'Upload Image'}
                 </button>
               </div>
             </form>
@@ -231,3 +247,4 @@ const AdminGallery = () => {
 };
 
 export default AdminGallery;
+

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { supabase } from './lib/supabase';
+
 
 // Client
 import Layout from './components/layout/Layout';
@@ -26,39 +26,9 @@ import AdminRegister from './pages/admin/Register';
 
 // Protected Route Guard
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const [session, setSession] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const token = localStorage.getItem('adminToken');
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) {
-        localStorage.setItem('adminToken', session.access_token);
-      } else {
-        localStorage.removeItem('adminToken');
-      }
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) {
-        localStorage.setItem('adminToken', session.access_token);
-      } else {
-        localStorage.removeItem('adminToken');
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-gray-100">Loading...</div>;
-  }
-
-  if (!session) {
+  if (!token) {
     return <Navigate to="/admin/login" replace />;
   }
   

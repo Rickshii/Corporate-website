@@ -8,15 +8,23 @@ const ClientGallery = () => {
   const [gallery, setGallery] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('All');
+
+  // Helper to resolve absolute vs relative uploads URL
+  const getFullImageUrl = (url: string) => {
+    if (!url) return '';
+    return url.startsWith('http') ? url : `${API_URL}${url}`;
+  };
   
   useEffect(() => {
     const fetchGallery = async () => {
       try {
         const res = await fetch(`${API_URL}/api/gallery`);
         const data = await res.json();
-        setGallery(data);
+        if (Array.isArray(data)) {
+          setGallery(data);
+        }
       } catch (err) {
-        console.error(err);
+        console.error('Error fetching client gallery:', err);
       } finally {
         setLoading(false);
       }
@@ -60,7 +68,7 @@ const ClientGallery = () => {
                       className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                         filter === cat 
                           ? 'bg-primary text-white shadow-md shadow-primary/20' 
-                          : 'bg-white text-gray-600 hover:bg-gray-100'
+                          : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-100'
                       }`}
                     >
                       {cat}
@@ -72,11 +80,11 @@ const ClientGallery = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {filteredGallery.map((item, idx) => (
-                <Reveal key={item.id} delay={idx * 0.1}>
+                <Reveal key={item._id || item.id} delay={idx * 0.1}>
                   <div className="group rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100">
                     <div className="aspect-[4/3] relative overflow-hidden bg-gray-100">
                       <img 
-                        src={item.imageUrl} 
+                        src={getFullImageUrl(item.imageUrl)} 
                         alt={item.title || 'Gallery Image'} 
                         className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out"
                         loading="lazy"
@@ -102,3 +110,4 @@ const ClientGallery = () => {
 };
 
 export default ClientGallery;
+

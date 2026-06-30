@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import prisma from '../lib/prisma';
+import { User } from '../models/models';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-1234';
 
@@ -9,16 +9,19 @@ export const loginAdmin = async (req: Request, res: Response): Promise<void> => 
   try {
     const { email, password } = req.body;
 
-    const user = await prisma.user.findUnique({
-      where: { email }
-    });
+    if (!email || !password) {
+      res.status(400).json({ message: 'Email and password are required' });
+      return;
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
 
     if (!user) {
       res.status(401).json({ message: 'Invalid credentials' });
       return;
     }
 
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = await bcrypt.compare(password, user.password || '');
 
     if (!isValidPassword) {
       res.status(401).json({ message: 'Invalid credentials' });
@@ -26,7 +29,7 @@ export const loginAdmin = async (req: Request, res: Response): Promise<void> => 
     }
 
     const token = jwt.sign(
-      { userId: user.id, role: user.role },
+      { userId: user._id, role: user.role, email: user.email },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -34,7 +37,7 @@ export const loginAdmin = async (req: Request, res: Response): Promise<void> => 
     res.json({
       message: 'Logged in successfully',
       token,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role }
+      user: { id: user._id, name: user.name, email: user.email, role: user.role }
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -46,7 +49,12 @@ export const registerAdmin = async (req: Request, res: Response): Promise<void> 
   try {
     const { email, password, name } = req.body;
 
-    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (!email || !password) {
+      res.status(400).json({ message: 'Email and password are required' });
+      return;
+    }
+
+    const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
     if (existingUser) {
       res.status(400).json({ message: 'User already exists' });
       return;
@@ -55,16 +63,16 @@ export const registerAdmin = async (req: Request, res: Response): Promise<void> 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name,
-        role: 'ADMIN'
-      }
+    const newUser = new User({
+      email: email.toLowerCase().trim(),
+      password: hashedPassword,
+      name,
+      role: 'ADMIN'
     });
 
-    res.status(201).json({ message: 'Admin user created successfully', userId: newUser.id });
+    await newUser.save();
+
+    res.status(201).json({ message: 'Admin user created successfully', userId: newUser._id });
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -75,7 +83,6 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
   try {
     const { email, secretKey, newPassword } = req.body;
     
-    // In a real app, use email. Here we use a secret key for verification.
     const ADMIN_SECRET = process.env.ADMIN_SECRET_KEY || 'values-vruksha-secret-2026';
     
     if (secretKey !== ADMIN_SECRET) {
@@ -83,7 +90,12 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    if (!email || !newPassword) {
+      res.status(400).json({ message: 'Email and new password are required' });
+      return;
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
       res.status(404).json({ message: 'User not found' });
       return;
@@ -92,10 +104,8 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-    await prisma.user.update({
-      where: { email },
-      data: { password: hashedPassword }
-    });
+    user.password = hashedPassword;
+    await user.save();
 
     res.json({ message: 'Password has been reset successfully' });
   } catch (error) {
@@ -107,7 +117,6 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
 export const changePassword = async (req: Request, res: Response): Promise<void> => {
   try {
     const { oldPassword, newPassword } = req.body;
-    // user comes from authenticateAdmin middleware
     const userId = (req as any).user?.userId;
 
     if (!userId) {
@@ -115,13 +124,13 @@ export const changePassword = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const user = await User.findById(userId);
     if (!user) {
       res.status(404).json({ message: 'User not found' });
       return;
     }
 
-    const isValidPassword = await bcrypt.compare(oldPassword, user.password);
+    const isValidPassword = await bcrypt.compare(oldPassword, user.password || '');
     if (!isValidPassword) {
       res.status(400).json({ message: 'Incorrect old password' });
       return;
@@ -130,10 +139,8 @@ export const changePassword = async (req: Request, res: Response): Promise<void>
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-    await prisma.user.update({
-      where: { id: userId },
-      data: { password: hashedPassword }
-    });
+    user.password = hashedPassword;
+    await user.save();
 
     res.json({ message: 'Password changed successfully' });
   } catch (error) {
@@ -141,3 +148,4 @@ export const changePassword = async (req: Request, res: Response): Promise<void>
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+

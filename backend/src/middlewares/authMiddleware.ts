@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { supabase } from '../lib/supabase';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-1234';
 
 export interface AuthRequest extends Request {
   user?: any;
@@ -21,17 +23,18 @@ export const authenticateAdmin = async (req: AuthRequest, res: Response, next: N
       return;
     }
 
-    // Verify token with Supabase
-    const { data: { user }, error } = await supabase.auth.getUser(token);
+    // Verify local JWT token
+    const decoded = jwt.verify(token, JWT_SECRET);
     
-    if (error || !user) {
+    if (!decoded) {
       res.status(401).json({ message: 'Invalid or expired token' });
       return;
     }
     
-    req.user = user;
+    req.user = decoded;
     next();
   } catch (error) {
     res.status(401).json({ message: 'Invalid or expired token' });
   }
 };
+
